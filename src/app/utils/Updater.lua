@@ -177,6 +177,7 @@ local function doUpdate(url, callback, info)
 			-- remove extPath, then rename extTmp -> extPath
 			FileUtils:removeDirectory(extPath)
 			FileUtils:renameFile(FileUtils:getWritablePath(), extTmpName, extName)
+			FileUtils:purgeCachedEntries() -- clear filename search cache
 			-- reload game.zip, purgeCachedData
 			for _, zip in ipairs(info.packages) do
 				cc.LuaLoadChunksFromZIP(zip .. cpu .. ".zip")
@@ -264,17 +265,9 @@ function Updater.init(sceneName, url, callback)
 	end
 	app.__UpdateInited = true
 
-	local data
-	local extConf = extPath .. configFileName
-	if FileUtils:isFileExist(extConf) then
-		data = FileUtils:getDataFromFile(extConf)
-		-- add extPath before apk path
-		cc.FileUtils:getInstance():addSearchPath(extPath)
-	else
-		data = FileUtils:getDataFromFile("res/" .. configFileName)
-	end
-	-- always need apk path
-	cc.FileUtils:getInstance():addSearchPath("res/")
+	-- add extPath before apk path
+	FileUtils:setSearchPaths({extPath, "res/"})
+	local data = FileUtils:getDataFromFile(configFileName)
 
 	-- let the first frame display, and avoid to replaceScene in the scene ctor(BUG)
 	scheduler.performWithDelayGlobal(function()
