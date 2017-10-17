@@ -229,7 +229,9 @@ local function checkUpdate(url, callback)
 			-- do the real things
 			local response = request:getResponseString()
 			response = json.decode(response)
-			if checkVersion(data.GameVersion, response.GameVersion) then
+			if checkVersion(data.EngineVersion, response.EngineVersion) then
+				callback(6)
+			elseif checkVersion(data.GameVersion, response.GameVersion) then
 				-- save config
 				saveFile(extTmp .. configFileName, request:getResponseData())
 				local info = getDiff(data, response)
@@ -255,6 +257,7 @@ callback(code, param1, param2)
 	3 Network connect fail
 	4 HTTP Server error(param1:httpCode)
 	5 HTTP request error(param1:requestCode)
+	6 EngineVersion old, need apk or ipa update
 --]]
 function Updater.init(sceneName, url, callback)
 	if app.__UpdateInited then
@@ -265,14 +268,24 @@ function Updater.init(sceneName, url, callback)
 	end
 	app.__UpdateInited = true
 
+	-- get config in apk
+	local sandbox = FileUtils:getDataFromFile("res/" .. configFileName)
+	sandbox = json.decode(sandbox)
 	-- add extPath before apk path
-	FileUtils:setSearchPaths({extPath, "res/"})
+	FileUtils:setSearchPaths{extPath, "res/"}
+	-- get config in URes or apk
 	local data = FileUtils:getDataFromFile(configFileName)
+	data = json.decode(data)
+	if checkVersion(data.EngineVersion, sandbox.EngineVersion) then
+		-- apk has update, so remove old URes.
+		FileUtils:removeDirectory(extPath)
+		FileUtils:purgeCachedEntries()
+		data = sandbox -- use apk data to init
+	end
 
 	-- let the first frame display, and avoid to replaceScene in the scene ctor(BUG)
 	scheduler.performWithDelayGlobal(function()
 		-- load chunks
-		data = json.decode(data)
 		for _, zip in ipairs(data.packages) do
 			cc.LuaLoadChunksFromZIP(zip .. cpu .. ".zip")
 		end
