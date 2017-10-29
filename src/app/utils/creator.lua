@@ -4,6 +4,11 @@ local spriteFrameCache = cc.SpriteFrameCache:getInstance()
 
 local function loadFrames(spriteFrames)
 	for _, info in ipairs(spriteFrames) do
+		-- fix the value
+		info.rect.width = info.rect.w
+		info.rect.height = info.rect.h
+		info.originalSize.width = info.rect.w
+		info.originalSize.height = info.rect.h
 		local frame = cc.SpriteFrame:create(
 			info.texturePath,
 			info.rect,
@@ -12,6 +17,8 @@ local function loadFrames(spriteFrames)
 			info.originalSize
 		)
 		-- XXX: info.centerRect is not use in Quick
+		-- info.centerRect.width = info.centerRect.w
+		-- info.centerRect.height = info.centerRect.h
 		if frame then
 			spriteFrameCache:addSpriteFrame(frame, info.name)
 			print("Added frame:" .. info.name)
@@ -20,18 +27,58 @@ local function loadFrames(spriteFrames)
 end
 
 local function parseNode(obj, node)
-	dump(node)
+	-- node.colliders, node.groupIndex not support
+	obj:setAnchorPoint(node.anchorPoint)
+	obj:setCascadeOpacityEnabled(node.cascadeOpacityEnabled)
+	obj:setColor(node.color)
+	obj:setContentSize(node.contentSize)
+	obj:setVisible(node.enabled)
+	obj:setGlobalZOrder(node.globalZOrder)
+	obj:setGlobalZOrder(node.globalZOrder)
+	obj:setLocalZOrder(node.localZOrder)
+	obj:setOpacity(node.opacity)
+	obj:setOpacityModifyRGB(node.opacityModifyRGB)
+	obj:setTag(node.tag)
+	obj.name = node.name
+	if node.position then
+		obj:setPosition(node.position.x, node.position.y)
+	end
+	if node.rotationSkewX then
+		obj:setRotationSkewX(node.rotationSkewX)
+	end
+	if node.rotationSkewY then
+		obj:setRotationSkewY(node.rotationSkewY)
+	end
+	if node.scaleX then
+		obj:setScaleX(node.scaleX)
+	end
+	if node.scaleY then
+		obj:setScaleY(node.scaleY)
+	end
+	if node.skewX then
+		obj:setSkewX(node.skewX)
+	end
+	if node.skewY then
+		obj:setSkewY(node.skewY)
+	end
+
 	return obj
 end
 
 local nodeFactory = {
 	Scene = function(object)
-		local node = cc.Node:create()
+		local node = cc.Node:create() -- use node replace with scene
 		return parseNode(node, object.node)
 	end,
-	Sprite = function(object)
+	Node = function(object)
 		local node = cc.Node:create()
-		return parseNode(node, object.node)
+		return parseNode(node, object)
+	end,
+	Sprite = function(object)
+		-- FIXME sizeMode?spriteType?trimEnabled?
+		local sprite = cc.Sprite:createWithSpriteFrameName(object.spriteFrameName)
+		sprite:setBlendFunc(object.srcBlend, object.dstBlend)
+		return parseNode(sprite, object.node)
 	end,
 	EditBox = function(object)
 		local node = cc.Node:create()

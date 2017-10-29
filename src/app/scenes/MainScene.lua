@@ -9,7 +9,8 @@ function MainScene:ctor()
         :align(display.CENTER, display.cx, display.cy)
         :addTo(self)
 	
-	creator.parseJson("creator/node.json")
+	local root = creator.parseJson("creator/node.json")
+	root:addTo(self)
 end
 
 function MainScene:onEnter()
