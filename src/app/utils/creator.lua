@@ -1,5 +1,6 @@
 local creator = {}
 local cc = cc
+local LabelTTFEx = import(".LabelTTFEx")
 local spriteFrameCache = cc.SpriteFrameCache:getInstance()
 
 local function loadFrames(spriteFrames)
@@ -30,7 +31,9 @@ local function parseNode(obj, node)
 	-- node.colliders, node.groupIndex not support
 	obj:setAnchorPoint(node.anchorPoint)
 	obj:setCascadeOpacityEnabled(node.cascadeOpacityEnabled)
-	obj:setColor(node.color)
+	if node.color then
+		obj:setColor(node.color)
+	end
 	obj:setContentSize(node.contentSize)
 	obj:setVisible(node.enabled)
 	obj:setGlobalZOrder(node.globalZOrder)
@@ -89,8 +92,27 @@ local nodeFactory = {
 		return parseNode(node, object.node)
 	end,
 	Label = function(object)
-		local node = cc.Node:create()
-		return parseNode(node, object.node)
+		local label = LabelTTFEx.new(object.labelText, object.fontName,
+			object.fontSize, object.node.color)
+		-- horizontalAlignment
+		if "Left" == object.horizontalAlignment then
+			label.label:setHorizontalAlignment(cc.TEXT_ALIGNMENT_LEFT)
+		elseif "Center" == object.horizontalAlignment then
+			label.label:setHorizontalAlignment(cc.TEXT_ALIGNMENT_CENTER)
+		else
+			label.label:setHorizontalAlignment(cc.TEXT_ALIGNMENT_RIGHT)
+		end
+		-- verticalAlignment
+		if "Bottom" == object.verticalAlignment then
+			label.label:setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_BOTTOM)
+		elseif "Center" == object.verticalAlignment then
+			label.label:setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+		else
+			label.label:setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_TOP)
+		end
+		-- FIXME overflowType?enableWrap?lineHeight?enableWrap?
+		object.node.color = nil -- cancel node setting
+		return parseNode(label, object.node)
 	end,
 	ScrollView = function(object)
 		local node = cc.Node:create()
@@ -131,7 +153,7 @@ function creator.parseJson(file)
 		return
 	end
 
-	if "0.2" ~= tab.version then
+	if "0.3" ~= tab.version then
 		print("== Unsupport ceator json verson.")
 		return
 	end

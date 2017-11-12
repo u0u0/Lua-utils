@@ -5,11 +5,7 @@ local MainScene = class("MainScene", function()
 end)
 
 function MainScene:ctor()
-    display.newTTFLabel({text = "Hello, World", size = 64})
-        :align(display.CENTER, display.cx, display.cy)
-        :addTo(self)
-	
-	local root = creator.parseJson("creator/node.json")
+	local root = creator.parseJson("creator/main.json")
 	root:addTo(self)
 end
 

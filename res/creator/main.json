@@ -1,0 +1,214 @@
+{
+	"version": "0.3",
+	"root": {
+		"object": {
+			"node": {
+				"contentSize": {
+					"w": 0,
+					"h": 0
+				},
+				"enabled": true,
+				"anchorPoint": {
+					"x": 0,
+					"y": 0
+				},
+				"cascadeOpacityEnabled": true,
+				"color": {
+					"r": 255,
+					"g": 255,
+					"b": 255
+				},
+				"globalZOrder": 0,
+				"localZOrder": 0,
+				"opacity": 255,
+				"opacityModifyRGB": false,
+				"tag": -1,
+				"groupIndex": 0,
+				"colliders": []
+			}
+		},
+		"object_type": "Scene",
+		"children": [
+			{
+				"object": {
+					"node": {
+						"contentSize": {
+							"w": 43,
+							"h": 34
+						},
+						"enabled": true,
+						"name": "sprite",
+						"anchorPoint": {
+							"x": 0.5,
+							"y": 0.5
+						},
+						"cascadeOpacityEnabled": true,
+						"color": {
+							"r": 255,
+							"g": 255,
+							"b": 255
+						},
+						"globalZOrder": 0,
+						"localZOrder": 0,
+						"opacity": 255,
+						"opacityModifyRGB": false,
+						"position": {
+							"x": 136,
+							"y": 186
+						},
+						"rotationSkewX": 0,
+						"rotationSkewY": 0,
+						"scaleX": 1,
+						"scaleY": 1,
+						"skewX": 0,
+						"skewY": 0,
+						"tag": -1,
+						"groupIndex": 0,
+						"colliders": []
+					},
+					"spriteFrameName": "img/animal_panda.png",
+					"spriteType": "Simple",
+					"srcBlend": 770,
+					"dstBlend": 771,
+					"trimEnabled": true,
+					"sizeMode": "Trimmed"
+				},
+				"object_type": "Sprite",
+				"children": []
+			},
+			{
+				"object": {
+					"node": {
+						"contentSize": {
+							"w": 82.28,
+							"h": 20
+						},
+						"enabled": true,
+						"name": "label",
+						"anchorPoint": {
+							"x": 0.5,
+							"y": 0.5
+						},
+						"cascadeOpacityEnabled": true,
+						"color": {
+							"r": 255,
+							"g": 255,
+							"b": 255
+						},
+						"globalZOrder": 0,
+						"localZOrder": 0,
+						"opacity": 255,
+						"opacityModifyRGB": false,
+						"position": {
+							"x": 240,
+							"y": 251
+						},
+						"rotationSkewX": 0,
+						"rotationSkewY": 0,
+						"scaleX": 1,
+						"scaleY": 1,
+						"skewX": 0,
+						"skewY": 0,
+						"tag": -1,
+						"groupIndex": 0,
+						"colliders": []
+					},
+					"fontSize": 20,
+					"labelText": "SysLabel",
+					"horizontalAlignment": "Center",
+					"verticalAlignment": "Center",
+					"overflowType": "None",
+					"enableWrap": true,
+					"fontType": "System",
+					"fontName": "arial"
+				},
+				"object_type": "Label",
+				"children": []
+			},
+			{
+				"object": {
+					"node": {
+						"contentSize": {
+							"w": 184.5,
+							"h": 30
+						},
+						"enabled": true,
+						"name": "label",
+						"anchorPoint": {
+							"x": 0.5,
+							"y": 0.5
+						},
+						"cascadeOpacityEnabled": true,
+						"color": {
+							"r": 213,
+							"g": 60,
+							"b": 170
+						},
+						"globalZOrder": 0,
+						"localZOrder": 0,
+						"opacity": 255,
+						"opacityModifyRGB": false,
+						"position": {
+							"x": 179,
+							"y": 97
+						},
+						"rotationSkewX": 0,
+						"rotationSkewY": 0,
+						"scaleX": 1,
+						"scaleY": 1,
+						"skewX": 0,
+						"skewY": 0,
+						"tag": -1,
+						"groupIndex": 0,
+						"colliders": []
+					},
+					"fontSize": 30,
+					"labelText": "FreeTypeLabel",
+					"horizontalAlignment": "Left",
+					"verticalAlignment": "Bottom",
+					"overflowType": "None",
+					"enableWrap": true,
+					"fontName": "creator/29bd4115-e734-40e7-bbd5-484530644fe5/TarantellaMF.ttf",
+					"fontType": "TTF",
+					"lineHeight": 0
+				},
+				"object_type": "Label",
+				"children": []
+			}
+		]
+	},
+	"spriteFrames": [
+		{
+			"name": "img/animal_panda.png",
+			"texturePath": "creator/img/animal_panda.png",
+			"rect": {
+				"x": 3,
+				"y": 9,
+				"w": 43,
+				"h": 34
+			},
+			"offset": {
+				"x": 0.5,
+				"y": -2
+			},
+			"rotated": false,
+			"originalSize": {
+				"w": 48,
+				"h": 48
+			},
+			"centerRect": {
+				"x": 0,
+				"y": 0,
+				"w": 43,
+				"h": 34
+			}
+		}
+	],
+	"collisionMatrix": [
+		{
+			"value": [
+				true
+			]
+		}
+	]
+}
