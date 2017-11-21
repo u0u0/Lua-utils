@@ -59,7 +59,7 @@ end
 -- check if the remain file is OK
 local function isRemainOK(name, md5)
 	local path = FileUtils:fullPathForFilename(name)
-	if string.find(path, extPath) == 1 then -- ext files
+	if string.find(path, extPath, 1, true) == 1 then -- ext files
 		if FileUtils:isFileExist(path) and crypto.md5file(path) == md5 then
 			copyFile(path, extTmp .. name) -- copy extPath => extTmp
 			return true
