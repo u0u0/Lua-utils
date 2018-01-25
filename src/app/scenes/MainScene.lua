@@ -16,6 +16,7 @@ end
 function MainScene:TableViewTest()
 	-- create listview, or get listview from csb
 	local lv = ccui.ListView:create()
+	lv:setBounceEnabled(true)
 	lv:setContentSize(cc.size(300, 200))
 	lv:center():addTo(self)
 	lv:setBackGroundColorType(1)

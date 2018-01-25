@@ -332,7 +332,7 @@ function TableView.attachTo(listview, sizeSource, loadSource, unloadSource)
 
 	-- init event
 	listview:addScrollViewEventListener(function(self, type)
-		if type == 4 then -- SCROLLING
+		if type >= 4 then -- SCROLLING & BOUNCE_XXX
 			-- avoid crash while remove touch node in scrolling event
 			self:performWithDelay(function()
 				self:_scrolling()
