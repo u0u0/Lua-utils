@@ -6,8 +6,9 @@ local maxHTTPRequest = 5
 local configFileName = "version.json"
 local extName = "URes"
 local extTmpName = "UTmp"
-local extPath = FileUtils:getWritablePath() .. extName .. "/"
-local extTmp = FileUtils:getWritablePath() .. extTmpName .. "/"
+local writablePath = FileUtils:getWritablePath()
+local extPath = writablePath .. extName .. "/"
+local extTmp = writablePath .. extTmpName .. "/"
 local cpu = "32"
 if jit.arch == "arm64" then
 	cpu = "64"
@@ -176,7 +177,7 @@ local function doUpdate(url, callback, info)
 			scheduler.unscheduleGlobal(Updater._scheduler)
 			-- remove extPath, then rename extTmp -> extPath
 			FileUtils:removeDirectory(extPath)
-			FileUtils:renameFile(FileUtils:getWritablePath(), extTmpName, extName)
+			FileUtils:renameFile(writablePath, extTmpName, extName)
 			FileUtils:purgeCachedEntries() -- clear filename search cache
 			-- reload game.zip, purgeCachedData
 			for _, zip in ipairs(info.packages) do
