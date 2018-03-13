@@ -34,9 +34,13 @@ end
 local function checkVersion(my, server)
 	my = string.split(my, ".")
 	server = string.split(server, ".")
-	for i, ver in ipairs(my) do
-		if tonumber(ver) < tonumber(server[i]) then
+	for i = 1, 3 do
+		mVer = tonumber(my[i])
+		mSver = tonumber(server[i])
+		if mVer < mSver then
 			return true
+		elseif mVer > mSver then
+			return false
 		end
 	end
 	return false
