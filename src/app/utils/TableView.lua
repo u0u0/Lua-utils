@@ -221,6 +221,7 @@ local function initDefaultItems(self, total)
 	-- remove old items and reset cursor
 	for i = self._headIndex, self._tailIndex do
 		items[i]:removeAllChildren()
+		self:_unloadSource(i)
 	end
 	self._headIndex = 0
 	self._tailIndex = -1
