@@ -159,6 +159,9 @@ local function doUpdate(url, callback, info)
 				-- save file
 				saveFile(extTmp .. downInfo[1], request:getResponseData())
 				info.change[index] = nil -- mark downloaded
+				if totalErrorCount > 0 then -- optimize for remove error count
+					totalErrorCount = totalErrorCount - 1
+				end
 			elseif event.name == "progress" then
 				local diff = event.dltotal - downInfo[3]
 				notifySize(diff)
@@ -192,7 +195,8 @@ local function doUpdate(url, callback, info)
 			callback(1)
 			return
 		end
-		if totalErrorCount >= maxHTTPRequest then -- error count just same with request count
+		-- no downloading, and reach the maxHTTPRequest
+		if 0 == curHttp and totalErrorCount >= maxHTTPRequest then
 			scheduler.unscheduleGlobal(Updater._scheduler)
 			callback(5, -1)
 			return
@@ -216,12 +220,7 @@ local function checkUpdate(url, callback)
 	data = json.decode(data)
 	assert(data, "Error: fail to parser config.json")
 
-	-- get server info
-	if not network.isInternetConnectionAvailable() then
-		callback(3)
-		return
-	end
-
+	-- get version.json
 	local request = network.createHTTPRequest(function(event)
 		local request = event.request
 		if event.name == "completed" then
@@ -254,20 +253,48 @@ local function checkUpdate(url, callback)
 	request:start()
 end
 
+local function getHeadUrl(headUrl, callback)
+	if not network.isInternetConnectionAvailable() then
+		callback(3)
+		return
+	end
+
+	local request = network.createHTTPRequest(function(event)
+		local request = event.request
+		if event.name == "completed" then
+			local code = request:getResponseStatusCode()
+			if code ~= 200 then
+				callback(4, code)
+				return
+			end
+
+			-- get head version url, start get version json
+			local url = request:getResponseString()
+			url = string.gsub(url, "[\n\r]", "") -- remove newline
+			checkUpdate(url, callback)
+		elseif event.name == "progress" then
+			-- print("progress" .. event.dltotal)
+		else
+			callback(5, request:getErrorCode())
+		end
+	end, headUrl, "GET")
+	request:start()
+end
+
 --[[ apk's "res/game32.zip" had been loaded by cpp code.
 check and load the right package's, then restart the LoadingScene
 callback(code, param1, param2)
 	1 success
-	2 update(param1:total, param2:remain)
+	2 update(param1:total, param2:cur)
 	3 Network connect fail
 	4 HTTP Server error(param1:httpCode)
 	5 HTTP request error(param1:requestCode)
 	6 EngineVersion old, need apk or ipa update
 --]]
-function Updater.init(sceneName, url, callback)
+function Updater.init(sceneName, headUrl, callback)
 	if app.__UpdateInited then
 		-- extends loaded, start the network checking now
-		checkUpdate(url, callback)
+		getHeadUrl(headUrl, callback)
 		app.__UpdateInited = nil
 		return
 	end
@@ -281,7 +308,8 @@ function Updater.init(sceneName, url, callback)
 	-- get config in URes or apk
 	local data = FileUtils:getDataFromFile(configFileName)
 	data = json.decode(data)
-	if checkVersion(data.EngineVersion, sandbox.EngineVersion) then
+	if checkVersion(data.EngineVersion, sandbox.EngineVersion)
+		or checkVersion(data.GameVersion, sandbox.GameVersion) then
 		-- apk has update, so remove old URes.
 		FileUtils:removeDirectory(extPath)
 		FileUtils:purgeCachedEntries()
