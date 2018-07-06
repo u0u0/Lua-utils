@@ -192,6 +192,7 @@ local function doUpdate(url, callback, info)
 			end
 			cc.Director:getInstance():purgeCachedData()
 			-- notify to start play scene
+			app.__UpdateInited = nil
 			callback(1)
 			return
 		end
@@ -239,9 +240,16 @@ local function checkUpdate(url, callback)
 				-- save config
 				saveFile(extTmp .. configFileName, request:getResponseData())
 				local info = getDiff(data, response)
-				doUpdate(url, callback, info)
+				if network.isLocalWiFiAvailable() then
+					doUpdate(url, callback, info)
+				else -- need UI pop confirm to continue
+					callback(7, info.size, function()
+						doUpdate(url, callback, info)
+					end)
+				end
 			else
 				print("== no need update")
+				app.__UpdateInited = nil
 				callback(1)
 			end
 		elseif event.name == "progress" then
@@ -290,12 +298,12 @@ callback(code, param1, param2)
 	4 HTTP Server error(param1:httpCode)
 	5 HTTP request error(param1:requestCode)
 	6 EngineVersion old, need apk or ipa update
+	7 Need update, (param1:total, param2:func), wait UI check WIFI.
 --]]
 function Updater.init(sceneName, headUrl, callback)
 	if app.__UpdateInited then
 		-- extends loaded, start the network checking now
 		getHeadUrl(headUrl, callback)
-		app.__UpdateInited = nil
 		return
 	end
 	app.__UpdateInited = true
