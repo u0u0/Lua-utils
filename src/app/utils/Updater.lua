@@ -175,6 +175,7 @@ local function doUpdate(url, callback, info)
 		downInfo[2] = true -- is downloading
 		downInfo[3] = 0 -- downloaded size
 		curHttp = curHttp + 1
+		request:setTimeout(3600)
 		request:start()
 	end
 
@@ -258,6 +259,7 @@ local function checkUpdate(url, callback)
 			callback(5, request:getErrorCode())
 		end
 	end, url .. "/" .. configFileName, "GET")
+	request:setTimeout(60)
 	request:start()
 end
 
@@ -286,6 +288,7 @@ local function getHeadUrl(headUrl, callback)
 			callback(5, request:getErrorCode())
 		end
 	end, headUrl, "GET")
+	request:setTimeout(30)
 	request:start()
 end
 
