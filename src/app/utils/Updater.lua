@@ -86,13 +86,13 @@ local function getDiff(my, server)
 			-- get changing files
 			if value[1] ~= v[1] then
 				if isNeedDownload(k, value[1]) then
-					table.insert(change, {k})
+					table.insert(change, {url = k, total = value[2]})
 					size = size + value[2]
 				end
 			else
 				-- XXX:need check? just do copy??
 				if not isRemainOK(k, value[1]) then
-					table.insert(change, {k})
+					table.insert(change, {url = k, total = value[2]})
 					size = size + value[2]
 				end
 			end
@@ -106,7 +106,7 @@ local function getDiff(my, server)
 		else -- get new adding files
 			if isNeedDownload(k, value[1]) then
 				size = size + value[2]
-				table.insert(change, {k})
+				table.insert(change, {url = k, total = value[2]})
 			end
 		end
 	end
@@ -135,14 +135,14 @@ local function doUpdate(url, callback, info)
 	local notifyError = function(downInfo)
 		curHttp = curHttp - 1
 		totalErrorCount = totalErrorCount + 1
-		notifySize(-downInfo[3]) -- cancel getting size
-		downInfo[2] = nil
-		downInfo[3] = nil
+		notifySize(-downInfo.getSize) -- cancel getting size
+		downInfo.isReqed = nil
+		downInfo.getSize = nil
 	end
 
 	local newRequest = function(index)
 		local downInfo = info.change[index]
-		local downUrl = url .. "/" .. downInfo[1]
+		local downUrl = url .. "/" .. downInfo.url
 		local request = network.createHTTPRequest(function(event)
 			local request = event.request
 			if event.name == "completed" then
@@ -154,28 +154,28 @@ local function doUpdate(url, callback, info)
 
 				-- info size
 				curHttp = curHttp - 1
-				local diff = request:getResponseDataLength() - downInfo[3]
+				local diff = request:getResponseDataLength() - downInfo.getSize
 				notifySize(diff)
 				-- save file
-				saveFile(extTmp .. downInfo[1], request:getResponseData())
+				saveFile(extTmp .. downInfo.url, request:getResponseData())
 				info.change[index] = nil -- mark downloaded
 				if totalErrorCount > 0 then -- optimize for remove error count
 					totalErrorCount = totalErrorCount - 1
 				end
 			elseif event.name == "progress" then
-				local diff = event.dltotal - downInfo[3]
+				local diff = event.dltotal - downInfo.getSize
 				notifySize(diff)
-				downInfo[3] = event.dltotal
+				downInfo.getSize = event.dltotal
 			else
 				notifyError(downInfo)
 			end
 		end, downUrl, "GET")
 
 		-- add downloading mark
-		downInfo[2] = true -- is downloading
-		downInfo[3] = 0 -- downloaded size
+		downInfo.isReqed = true -- is downloading
+		downInfo.getSize = 0 -- downloaded size
 		curHttp = curHttp + 1
-		request:setTimeout(3600)
+		request:setTimeout(math.max(10, downInfo.total / 10240)) -- 10k/s
 		request:start()
 	end
 
@@ -206,7 +206,7 @@ local function doUpdate(url, callback, info)
 		-- a request per frame event
 		if curHttp < maxHTTPRequest and table.nums(info.change) > curHttp then
 			for index, downInfo in pairs(info.change) do
-				if not downInfo[2] then
+				if true ~= downInfo.isReqed then
 					newRequest(index)
 					break
 				end
@@ -259,7 +259,7 @@ local function checkUpdate(url, callback)
 			callback(5, request:getErrorCode())
 		end
 	end, url .. "/" .. configFileName, "GET")
-	request:setTimeout(60)
+	request:setTimeout(30)
 	request:start()
 end
 
@@ -288,7 +288,7 @@ local function getHeadUrl(headUrl, callback)
 			callback(5, request:getErrorCode())
 		end
 	end, headUrl, "GET")
-	request:setTimeout(30)
+	request:setTimeout(15)
 	request:start()
 end
 
