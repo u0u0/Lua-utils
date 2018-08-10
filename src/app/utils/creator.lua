@@ -1,6 +1,5 @@
 local creator = {}
 local cc = cc
-local LabelTTFEx = import(".LabelTTFEx")
 local spriteFrameCache = cc.SpriteFrameCache:getInstance()
 
 local function loadFrames(spriteFrames)
@@ -34,14 +33,19 @@ local function parseNode(obj, node)
 	if node.color then
 		obj:setColor(node.color)
 	end
-	obj:setContentSize(node.contentSize)
+	if node.contentSize then
+		obj:setContentSize(node.contentSize)
+	end
 	obj:setVisible(node.enabled)
-	obj:setGlobalZOrder(node.globalZOrder)
-	obj:setGlobalZOrder(node.globalZOrder)
+	if node.globalZOrder then
+		obj:setGlobalZOrder(node.globalZOrder)
+	end
 	obj:setLocalZOrder(node.localZOrder)
 	obj:setOpacity(node.opacity)
 	obj:setOpacityModifyRGB(node.opacityModifyRGB)
-	obj:setTag(node.tag)
+	if node.tag then
+		obj:setTag(node.tag)
+	end
 	obj.name = node.name
 	if node.position then
 		obj:setPosition(node.position.x, node.position.y)
@@ -88,31 +92,33 @@ local nodeFactory = {
 		return parseNode(node, object.node)
 	end,
 	Button = function(object)
-		local node = cc.Node:create()
-		return parseNode(node, object.node)
+		local btn = ccui.Button:create(object.spriteFrameName, object.pressedSpriteFrameName,
+			object.disabledSpriteFrameName, 1)
+		return parseNode(btn, object.node)
 	end,
 	Label = function(object)
-		local label = LabelTTFEx.new(object.labelText, object.fontName,
-			object.fontSize, object.node.color)
+		local text = ccui.Text:create(object.labelText, object.fontName, object.fontSize)
+		text:setTextColor(object.node.color)
 		-- horizontalAlignment
 		if "Left" == object.horizontalAlignment then
-			label.label:setHorizontalAlignment(cc.TEXT_ALIGNMENT_LEFT)
+			text:setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_LEFT)
 		elseif "Center" == object.horizontalAlignment then
-			label.label:setHorizontalAlignment(cc.TEXT_ALIGNMENT_CENTER)
+			text:setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_CENTER)
 		else
-			label.label:setHorizontalAlignment(cc.TEXT_ALIGNMENT_RIGHT)
+			text:setTextHorizontalAlignment(cc.TEXT_ALIGNMENT_RIGHT)
 		end
 		-- verticalAlignment
 		if "Bottom" == object.verticalAlignment then
-			label.label:setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_BOTTOM)
+			text:setTextVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_BOTTOM)
 		elseif "Center" == object.verticalAlignment then
-			label.label:setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+			text:setTextVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
 		else
-			label.label:setVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_TOP)
+			text:setTextVerticalAlignment(cc.VERTICAL_TEXT_ALIGNMENT_TOP)
 		end
 		-- FIXME overflowType?enableWrap?lineHeight?enableWrap?
 		object.node.color = nil -- cancel node setting
-		return parseNode(label, object.node)
+		object.node.contentSize = nil -- make Lable do it own size
+		return parseNode(text, object.node)
 	end,
 	ScrollView = function(object)
 		local node = cc.Node:create()
@@ -132,6 +138,15 @@ local nodeFactory = {
 	end,
 }
 
+local function adjustPosition(node)
+	local parent = node:getParent()
+	local p_ap = parent:getAnchorPoint()
+	local p_cs = parent:getContentSize()
+	local offsetX = p_ap.x * p_cs.width
+	local offsetY = p_ap.y * p_cs.height
+	node:setPosition(node:getPositionX() + offsetX, node:getPositionY() + offsetY)
+end
+
 local function parseRoot(root)
 	if not nodeFactory[root.object_type] then
 		print("Unsupport node tpye:", root.object_type)
@@ -140,7 +155,9 @@ local function parseRoot(root)
 
 	local rootNode = nodeFactory[root.object_type](root.object)
 	for _, child in ipairs(root.children) do
-		rootNode:addChild(parseRoot(child))
+		local node = parseRoot(child)
+		rootNode:addChild(node)
+		adjustPosition(node)
 	end
 	return rootNode
 end
@@ -153,10 +170,7 @@ function creator.parseJson(file)
 		return
 	end
 
-	if "0.3" ~= tab.version then
-		print("== Unsupport ceator json verson.")
-		return
-	end
+	print(tab.version)
 
 	loadFrames(tab.spriteFrames)
 	return parseRoot(tab.root)
