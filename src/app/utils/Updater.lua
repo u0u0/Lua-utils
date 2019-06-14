@@ -193,7 +193,7 @@ local function doUpdate(url, callback, info)
 			end
 			cc.Director:getInstance():purgeCachedData()
 			-- notify to start play scene
-			app.__UpdateInited = nil
+			__UpdaterInited = nil
 			callback(1)
 			return
 		end
@@ -250,7 +250,7 @@ local function checkUpdate(url, callback)
 				end
 			else
 				print("== no need update")
-				app.__UpdateInited = nil
+				__UpdaterInited = nil
 				callback(1)
 			end
 		elseif event.name == "progress" then
@@ -304,12 +304,12 @@ callback(code, param1, param2)
 	7 Need update, (param1:total, param2:func), wait UI check WIFI.
 --]]
 function Updater.init(sceneName, headUrl, callback)
-	if app.__UpdateInited then
+	if __UpdaterInited then
 		-- extends loaded, start the network checking now
 		getHeadUrl(headUrl, callback)
 		return
 	end
-	app.__UpdateInited = true
+	__UpdaterInited = true
 
 	-- get config in apk
 	local sandbox = FileUtils:getDataFromFile("res/" .. configFileName)
@@ -333,8 +333,8 @@ function Updater.init(sceneName, headUrl, callback)
 		for _, zip in ipairs(data.packages) do
 			cc.LuaLoadChunksFromZIP(zip .. cpu .. ".zip")
 		end
-		print("== restarting scene")
-		app:enterScene(sceneName)
+		print("== restarting", sceneName)
+		cc.Director:getInstance():replaceScene(require(sceneName).new())
 	end, 0)
 end
 
