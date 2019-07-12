@@ -7,19 +7,20 @@ local ListView = ccui.ListView
 
 --[[ internal method
 self: listview
-size: listview's ContentSize
 item: to be check
 ]]--
-local function checkInView(self, size, item)
+local function checkInView(self, item)
 	-- item convert relative to listview
 	local posA = item:convertToWorldSpace(cc.p(0, 0))
 	posA = self:convertToNodeSpace(posA)
+	posA.x = posA.x + self._checkOffsetX
+	posA.y = posA.y + self._checkOffsetY
 	local sizeA = item:getContentSize()
 	-- AABB
-	local centerXdelta = (sizeA.width + size.width) / 2
-	local centerYdelta = (sizeA.height + size.height) / 2
-	if math.abs((posA.x + sizeA.width / 2) - (size.width / 2)) <= centerXdelta and
-		math.abs((posA.y + sizeA.height / 2) - (size.height / 2)) <= centerYdelta then
+	local centerXdelta = (sizeA.width + self._checkWidth) / 2
+	local centerYdelta = (sizeA.height + self._checkHeight) / 2
+	if math.abs((posA.x + sizeA.width / 2) - (self._checkWidth / 2)) <= centerXdelta and
+		math.abs((posA.y + sizeA.height / 2) - (self._checkHeight / 2)) <= centerYdelta then
 		return true
 	end
 	return false
@@ -27,11 +28,35 @@ end
 
 -- internal method
 local function scrolling(self)
+	if self._headIndex == nil then -- out view, try recreate while bouncing
+		for i = self._tailIndex, 1, -1 do
+			local item = ListView.getItem(self, i - 1)
+			if not checkInView(self, item) then
+				break
+			end
+			if #item:getChildren() > 0 then break end
+			item:addChild(self:_loadSource(i))
+			self._headIndex = i
+		end
+		return
+	end
+	if self._tailIndex == nil then -- out view, try recreate while bouncing
+		local items = ListView.getItems(self)
+		for i = self._headIndex, #items do
+			local item = items[i]
+			if not checkInView(self, item) then
+				break
+			end
+			if #item:getChildren() > 0 then break end
+			item:addChild(self:_loadSource(i))
+			self._tailIndex = i
+		end
+		return
+	end
+
 	if nil == self._innerP then return end
 
 	local direction = self:getDirection()
-	local size = self:getContentSize()
-
 	local isForward = false
 	if 1 == direction then -- VERTICAL
 		local py = self:getInnerContainer():getPositionY()
@@ -50,11 +75,11 @@ local function scrolling(self)
 	local item
 	if isForward then
 		item = ListView.getItem(self, self._tailIndex - 1)
-		if self:_checkInView(size, item) then -- tail in view
+		if checkInView(self, item) then -- tail in view
 			repeat -- add tail
 				item = ListView.getItem(self, self._tailIndex)
 				if nil == item then break end
-				if not self:_checkInView(size, item) then
+				if not checkInView(self, item) then
 					break
 				end
 				self._tailIndex = self._tailIndex + 1
@@ -62,7 +87,7 @@ local function scrolling(self)
 			until false
 			repeat -- remove head
 				item = ListView.getItem(self, self._headIndex - 1)
-				if self:_checkInView(size, item) then
+				if checkInView(self, item) then
 					break
 				end
 				item:removeAllChildren()
@@ -81,7 +106,7 @@ local function scrolling(self)
 			repeat
 				item = ListView.getItem(self, self._tailIndex)
 				if nil == item then break end
-				if self:_checkInView(size, item) then
+				if checkInView(self, item) then
 					self._tailIndex = self._tailIndex + 1
 					item:addChild(self:_loadSource(self._tailIndex))
 					if nil == self._headIndex then
@@ -98,11 +123,11 @@ local function scrolling(self)
 		end
 	else -- not isForward
 		item = ListView.getItem(self, self._headIndex - 1)
-		if self:_checkInView(size, item) then -- head in view
+		if checkInView(self, item) then -- head in view
 			repeat -- add head
 				item = ListView.getItem(self, self._headIndex - 2)
 				if nil == item then break end
-				if not self:_checkInView(size, item) then
+				if not checkInView(self, item) then
 					break
 				end
 				self._headIndex = self._headIndex - 1
@@ -110,7 +135,7 @@ local function scrolling(self)
 			until false
 			repeat -- remove tail
 				item = ListView.getItem(self, self._tailIndex - 1)
-				if self:_checkInView(size, item) then
+				if checkInView(self, item) then
 					break
 				end
 				item:removeAllChildren()
@@ -129,7 +154,7 @@ local function scrolling(self)
 			repeat
 				item = ListView.getItem(self, self._headIndex - 2)
 				if nil == item then break end
-				if self:_checkInView(size, item) then
+				if checkInView(self, item) then
 					self._headIndex = self._headIndex - 1
 					item:addChild(self:_loadSource(self._headIndex))
 					if nil == self._tailIndex then
@@ -179,13 +204,13 @@ local function jumpTo(self, index)
 		end
 		-- find items in viewRect
 		for i = index, 1, -1 do
-			if not self:_checkInView(size, items[i]) then
+			if not checkInView(self, items[i]) then
 				break
 			end
 			self._headIndex = i
 		end
 		for i = index, #items do
-			if not self:_checkInView(size, items[i]) then
+			if not checkInView(self, items[i]) then
 				break
 			end
 			self._tailIndex = i
@@ -287,7 +312,7 @@ unloadSource = function(self, index)
 	print("You can unload texture of index here")
 end
 
-note:	listview:addScrollViewEventListener() MUST call after TableView.attachTo()
+note: listview:addScrollViewEventListener() MUST call after TableView.attachTo()
 ]]--
 function TableView.attachTo(listview, sizeSource, loadSource, unloadSource)
 	-- new internal data
@@ -306,6 +331,12 @@ function TableView.attachTo(listview, sizeSource, loadSource, unloadSource)
 		return
 	end
 
+	-- check size double of realSize, improve bounce User Experience
+	local size = listview:getContentSize()
+	listview._checkOffsetX = size.width / 2
+	listview._checkOffsetY = size.height / 2
+	listview._checkWidth = size.width * 2
+	listview._checkHeight = size.height * 2
 	listview._headIndex = 0 -- init to defaut cursor
 	listview._tailIndex = -1 -- init to defaut cursor
 	-- hide ccui.ListView 's item methods
@@ -322,9 +353,6 @@ function TableView.attachTo(listview, sizeSource, loadSource, unloadSource)
 	listview.getItem = protectInfo
 	listview.getItems = protectInfo
 	listview.getIndex = protectInfo
-	-- new internal mothods
-	listview._checkInView = checkInView
-	listview._scrolling = scrolling
 	-- new external mothods
 	listview.jumpTo = jumpTo
 	listview.initDefaultItems = initDefaultItems
@@ -336,7 +364,7 @@ function TableView.attachTo(listview, sizeSource, loadSource, unloadSource)
 		if type >= 4 then -- SCROLLING & BOUNCE_XXX
 			-- avoid crash while remove touch node in scrolling event
 			self:performWithDelay(function()
-				self:_scrolling()
+				scrolling(self)
 			end, 0)
 		end
 		if self._scrollCB then
