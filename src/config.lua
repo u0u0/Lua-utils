@@ -8,15 +8,6 @@ DEBUG_FPS = true
 -- dump memory info every 10 seconds
 DEBUG_MEM = false
 
--- load deprecated API
-LOAD_DEPRECATED_API = false
-
--- load shortcodes API
-LOAD_SHORTCODES_API = true
-
--- screen orientation
-CONFIG_SCREEN_ORIENTATION = "landscape"
-
 -- design resolution
 CONFIG_SCREEN_WIDTH  = 960
 CONFIG_SCREEN_HEIGHT = 640
