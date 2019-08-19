@@ -107,10 +107,12 @@ end
     @return:
 ]]
 function TableView:reloadData()
+	self:_correctFillOrder()
 	self.direction = TableViewDirection.none
 
 	local cell = table.remove(self._cellsUsed, 1)
 	while cell do
+		self:_unloadCellAtIndex(cell:getIndex())
 		cell:setVisible(false)
 		table.insert(self._cellsFreed, cell)
 		cell:reset()
@@ -134,12 +136,14 @@ end
     @return:
 ]]
 function TableView:reloadDataInPos()
+	self:_correctFillOrder()
 	local baseSize = self:getContentSize()
 	local x, y = self:getInnerContainer():getPosition()
 	local beforeSize = self:getInnerContainerSize()
 
 	local cell = table.remove(self._cellsUsed, 1)
 	while cell do
+		self:_unloadCellAtIndex(cell:getIndex())
 		cell:setVisible(false)
 		table.insert(self._cellsFreed, cell)
 		cell:reset()
@@ -152,13 +156,18 @@ function TableView:reloadDataInPos()
 	self:_updateContentSize()
 
 	local afterSize = self:getInnerContainerSize()
-	if afterSize.width < baseSize.width or afterSize.height < baseSize.height then
-		self:_setInnerContainerInitPos()
-	else
-		local offset = cc.p(x, beforeSize.height - afterSize.height + y)
-		offset = cc.p(math.max(offset.x, baseSize.width - afterSize.width), math.min(0, offset.y))
-		self:getInnerContainer():setPosition(offset)
+	
+	if self.fillOrder == TableViewFillOrder.topToBottom then
+		y = math.max(math.min(0, beforeSize.height - afterSize.height + y), baseSize.height - afterSize.height)
+	elseif self.fillOrder == TableViewFillOrder.bottomToTop then
+		y = math.max(math.min(0, y), baseSize.height - afterSize.height)
 	end
+	if self.fillOrder == TableViewFillOrder.rightToLeft then
+		x = math.max(math.min(0, beforeSize.width - afterSize.width + x), baseSize.width - afterSize.width)
+	elseif self.fillOrder == TableViewFillOrder.leftToRight then
+		x = math.max(math.min(0, x), baseSize.width - afterSize.width)
+	end
+	self:getInnerContainer():setPosition(cc.p(x, y))
 
 	if self:_numberOfCells() > 0 then
 		self:_scrollViewDidScroll()
@@ -176,7 +185,7 @@ function TableView:dequeueCell()
 end
 
 --[[
-    @desc: 设置填充方向，对竖着滚动的有效
+    @desc: 设置填充方向
     author:BogeyRuan
     time:2019-08-13 18:33:55
     --@order: 
@@ -278,6 +287,12 @@ function TableView:removeCellAtIndex(index)
 	end
 end
 --------------------------------------------------
+
+function TableView:_correctFillOrder()
+	local dir = self:getDirection()
+	self.direction = dir
+	self.fillOrder = ((self.fillOrder - 1) % 2 + 1) + 2 * (self.direction - 1)
+end
 
 function TableView:_scrollViewDidScroll()
 	local cellsCount = self:_numberOfCells()
