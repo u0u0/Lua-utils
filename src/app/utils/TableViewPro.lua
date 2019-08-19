@@ -156,21 +156,18 @@ function TableView:reloadDataInPos()
 	self:_updateContentSize()
 
 	local afterSize = self:getInnerContainerSize()
-	if afterSize.width < baseSize.width or afterSize.height < baseSize.height then
-		self:_setInnerContainerInitPos()
-	else
-		if self.fillOrder == TableViewFillOrder.topToBottom then
-			y = math.max(math.min(0, beforeSize.height - afterSize.height + y), baseSize.height - afterSize.height)
-		elseif self.fillOrder == TableViewFillOrder.bottomToTop then
-			y = math.max(math.min(0, y), baseSize.height - afterSize.height)
-		end
-		if self.fillOrder == TableViewFillOrder.rightToLeft then
-			x = math.max(math.min(0, beforeSize.width - afterSize.width + x), baseSize.width - afterSize.width)
-		elseif self.fillOrder == TableViewFillOrder.leftToRight then
-			x = math.max(math.min(0, x), baseSize.width - afterSize.width)
-		end
-		self:getInnerContainer():setPosition(cc.p(x, y))
+	
+	if self.fillOrder == TableViewFillOrder.topToBottom then
+		y = math.max(math.min(0, beforeSize.height - afterSize.height + y), baseSize.height - afterSize.height)
+	elseif self.fillOrder == TableViewFillOrder.bottomToTop then
+		y = math.max(math.min(0, y), baseSize.height - afterSize.height)
 	end
+	if self.fillOrder == TableViewFillOrder.rightToLeft then
+		x = math.max(math.min(0, beforeSize.width - afterSize.width + x), baseSize.width - afterSize.width)
+	elseif self.fillOrder == TableViewFillOrder.leftToRight then
+		x = math.max(math.min(0, x), baseSize.width - afterSize.width)
+	end
+	self:getInnerContainer():setPosition(cc.p(x, y))
 
 	if self:_numberOfCells() > 0 then
 		self:_scrollViewDidScroll()
