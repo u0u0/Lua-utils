@@ -34,7 +34,8 @@ local TableViewFuncType = {
 	cellSize = "_cellSizeAtIndex",		--获取cell size,返回width, height
 	cellNum = "_numberOfCells",			--获取cell数量
 	cellLoad = "_loadCellAtIndex",		--加载cell，必须返回一个cell
-	cellUnload = "_unloadCellAtIndex"	--卸载一个cell时触发
+	cellUnload = "_unloadCellAtIndex",	--卸载一个cell时触发
+	viewScroll = "_scrollViewScroll"	--tableview滚动时触发
 }
 
 local TableViewFillOrder = {
@@ -57,6 +58,7 @@ function TableView:ctor(size)
 	self:addEventListener(function (self, type)
 		if type >= 4 then
 			self:_scrollViewDidScroll()
+			self:_scrollViewScroll()
 		end
 	end)
 	self:setBounceEnabled(true)
@@ -156,7 +158,6 @@ function TableView:reloadDataInPos()
 	self:_updateContentSize()
 
 	local afterSize = self:getInnerContainerSize()
-	
 	if self.fillOrder == TableViewFillOrder.topToBottom then
 		y = math.max(math.min(0, beforeSize.height - afterSize.height + y), baseSize.height - afterSize.height)
 	elseif self.fillOrder == TableViewFillOrder.bottomToTop then
@@ -527,6 +528,9 @@ function TableView:_loadCellAtIndex(index)
 end
 
 function TableView:_unloadCellAtIndex(index)
+end
+
+function TableView:_scrollViewScroll()
 end
 
 cc.TableView = TableView
