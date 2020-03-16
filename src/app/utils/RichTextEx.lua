@@ -1,5 +1,4 @@
 local htmlparser = import(".htmlparser")
-local LabelTTFEx = import(".LabelTTFEx")
 
 local RichTextEx = class("RichTextEx", function()
 	return ccui.RichText:create()
@@ -36,11 +35,13 @@ local clickDeal = function(id, content)
 	print(id, content)
 end
 
-RichTextEx.new([==[
+local rt = RichTextEx.new([==[
 <t c="#f00" s="50" id="click">Hello World!</t><br><i s="0_DEMO/icon/baogao_2.png" id="iamgeaa"></i>
 ]==], clickDeal)
 	:addTo(self)
 	:center()
+rt:formatText()
+dump(rt:getContentSize())
 ]]--
 
 -- do not support nesting
@@ -76,10 +77,19 @@ function RichTextEx:render(nodes)
 			if e.attributes.c then
 				color = c3b_parse(e.attributes.c)
 			end
-			local label = LabelTTFEx.new(e:getcontent(), font, size, color)
+
+			local label
+			if cc.FileUtils:getInstance():isFileExist(font) then
+				label = cc.Label:createWithTTF(e:getcontent(), font, size)
+				label:setColor(color)
+			else
+				label = cc.Label:createWithSystemFont(e:getcontent(), font, size)
+				label:setTextColor(color)
+			end
+
 			if e.attributes.id then
 				addTouch(label, e.attributes.id, e:getcontent())
-				label:enableUnderLine()
+				label:enableUnderline()
 			end
 			return ccui.RichElementCustomNode:create(0, display.COLOR_WHITE, 255, label)
 		end,
