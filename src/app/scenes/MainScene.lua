@@ -7,7 +7,8 @@ end)
 
 function MainScene:ctor()
 	-- self:TableViewTest()
-	self:TableViewProTest()
+	-- self:TableViewProTest()
+	self:CurveDrawTest()
 end
 
 function MainScene:CreatorTest()
@@ -91,6 +92,32 @@ function MainScene:TableViewProTest()
 		return true
 	end)
 	text:setTouchEnabled(true)
+end
+
+function MainScene:CurveDrawTest()
+	local bezier = require("app.utils.bezier")
+	local spline = require("app.utils.spline")
+
+	local targetPoints = {cc.p(0,0), cc.p(100, 100), cc.p(200, 50), cc.p(300, 200)}
+    local points = spline(targetPoints)
+    local drawnode = cc.DrawNode:create()
+    for i = 1, #points - 1 do
+        drawnode:drawLine(points[i], points[i + 1], cc.c4f(1,1,1,1))
+    end
+    for i,v in ipairs(targetPoints) do
+        drawnode:drawDot(v, 4, cc.c4f(1,0,0,1))
+    end
+    drawnode:addTo(self):pos(200, 200)
+
+    local drawnode2 = cc.DrawNode:create()
+    local points = bezier(targetPoints, 100)
+    for i = 1, #points - 1 do
+        drawnode2:drawLine(points[i], points[i + 1], cc.c4f(0,1,0,1))
+    end
+    for i,v in ipairs(targetPoints) do
+        drawnode2:drawDot(v, 4, cc.c4f(1,0,0,1))
+    end
+    drawnode2:addTo(self):pos(200, 400)
 end
 
 function MainScene:onEnter()
