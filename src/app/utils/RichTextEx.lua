@@ -100,7 +100,7 @@ function RichTextEx:render(nodes)
 				src = string.sub(src, 2)
 				isSpriteFrame = 1
 			end
-			local image = ccui.ImageView:create(e.attributes.s, isSpriteFrame)
+			local image = ccui.ImageView:create(src, isSpriteFrame)
 			local size = image:getContentSize()
 			if e.attributes.w then
 				size.width = tonumber(e.attributes.w)
