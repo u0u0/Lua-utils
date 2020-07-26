@@ -11,11 +11,6 @@ function MainScene:ctor()
 	self:CurveDrawTest()
 end
 
-function MainScene:CreatorTest()
-	local root = creator.parseJson("creator/main.json")
-	root:addTo(self)
-end
-
 function MainScene:TableViewTest()
 	-- create listview, or get listview from csb
 	local lv = ccui.ListView:create()
