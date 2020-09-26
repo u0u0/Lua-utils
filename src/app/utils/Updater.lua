@@ -16,18 +16,22 @@ end
 
 -- ********** internal function ********
 local function copyFile(src, dest)
-	local pInfo = io.pathinfo(dest)
-	FileUtils:createDirectory(pInfo.dirname) -- Create path recursively
-	local buf = io.readfile(src)
+	local buf = FileUtils:getDataFromFile(src)
 	if buf then
-		io.writefile(dest, buf, "wb")
+		local pInfo = io.pathinfo(dest)
+		if false == FileUtils:isDirectoryExist(pInfo.dirname) then
+			FileUtils:createDirectory(pInfo.dirname) -- Create path recursively
+		end
+		FileUtils:writeStringToFile(buf, dest)
 	end
 end
 
 local function saveFile(path, buf)
 	local pInfo = io.pathinfo(path)
-	FileUtils:createDirectory(pInfo.dirname) -- Create path recursively
-	io.writefile(path, buf, "wb")
+	if false == FileUtils:isDirectoryExist(pInfo.dirname) then
+		FileUtils:createDirectory(pInfo.dirname) -- Create path recursively
+	end
+	FileUtils:writeStringToFile(buf, path)
 end
 
 -- compare the string version, return true if need doUpdate
@@ -90,7 +94,6 @@ local function getDiff(my, server)
 					size = size + value[2]
 				end
 			else
-				-- XXX:need check? just do copy??
 				if not isRemainOK(k, value[1]) then
 					table.insert(change, {url = k, total = value[2]})
 					size = size + value[2]
@@ -143,11 +146,11 @@ local function doUpdate(url, callback, info)
 	local newRequest = function(index)
 		local downInfo = info.change[index]
 		local downUrl = url .. "/" .. downInfo.url
-		local request = network.createHTTPRequest(function(event)
+		local request = network.createHTTPDownload(function(event)
 			local request = event.request
 			if event.name == "completed" then
 				local code = request:getResponseStatusCode()
-				if code ~= 200 then
+				if code ~= 200 or code ~= 206 then
 					notifyError(downInfo)
 					return
 				end
@@ -156,9 +159,8 @@ local function doUpdate(url, callback, info)
 				curHttp = curHttp - 1
 				local diff = request:getResponseDataLength() - downInfo.getSize
 				notifySize(diff)
-				-- save file
-				saveFile(extTmp .. downInfo.url, request:getResponseData())
-				info.change[index] = nil -- mark downloaded
+				-- mark downloaded
+				info.change[index] = nil
 				if totalErrorCount > 0 then -- optimize for remove error count
 					totalErrorCount = totalErrorCount - 1
 				end
@@ -169,13 +171,12 @@ local function doUpdate(url, callback, info)
 			else
 				notifyError(downInfo)
 			end
-		end, downUrl, "GET")
+		end, downUrl, extTmp .. downInfo.url)
 
 		-- add downloading mark
 		downInfo.isReqed = true -- is downloading
 		downInfo.getSize = 0 -- downloaded size
 		curHttp = curHttp + 1
-		request:setTimeout(math.max(10, downInfo.total / 10240)) -- 10k/s
 		request:start()
 	end
 
