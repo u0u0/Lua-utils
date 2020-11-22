@@ -150,7 +150,7 @@ local function doUpdate(url, callback, info)
 			local request = event.request
 			if event.name == "completed" then
 				local code = request:getResponseStatusCode()
-				if code ~= 200 or code ~= 206 then
+				if code ~= 200 and code ~= 206 then
 					notifyError(downInfo)
 					return
 				end
