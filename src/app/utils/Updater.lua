@@ -10,7 +10,7 @@ local writablePath = string.gsub(FileUtils:getWritablePath(), "\\", "/")
 local extPath = writablePath .. extName .. "/"
 local extTmp = writablePath .. extTmpName .. "/"
 local cpu = "32"
-if jit.arch == "arm64" or jit.arch == "x64" then
+if jit.arch:sub(-2) == "64" then
 	cpu = "64"
 end
 
