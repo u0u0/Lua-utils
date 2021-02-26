@@ -63,10 +63,6 @@ function TableView:ctor(size)
 	end)
 	self:setBounceEnabled(true)
 
-	self:init(size)
-end
-
-function TableView:init(size)
 	self:setContentSize(size or cc.size(0, 0))
 	self:_updateCellsPosition()
 	self:_updateContentSize()
@@ -74,7 +70,7 @@ end
 
 --[[
     @desc: 注册TableViewFuncType定义的方法
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-14 09:48:58
     --@type:
 	--@func: 
@@ -87,7 +83,7 @@ end
 
 --[[
     @desc: 获取index位置上的cell，可能为空
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-14 09:49:28
     --@index: 
     @return:
@@ -104,21 +100,21 @@ end
 
 --[[
     @desc: 重新加载
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:32:31
     @return:
 ]]
 function TableView:reloadData()
 	self:_correctFillOrder()
-	self.direction = TableViewDirection.none
+	self.direction = TableViewDirection.none	-- 在_updateContentSize中会设置正确的方向，使内部容器回到初始位置
 
-	local cell = table.remove(self._cellsUsed, 1)
+	local cell = table.remove(self._cellsUsed)
 	while cell do
 		self:_unloadCellAtIndex(cell:getIndex())
 		cell:setVisible(false)
 		table.insert(self._cellsFreed, cell)
 		cell:reset()
-		cell = table.remove(self._cellsUsed, 1)
+		cell = table.remove(self._cellsUsed)
 	end
 	self._cellsUsed = {}
 	self._cellsIndex = {}
@@ -133,7 +129,7 @@ end
 
 --[[
     @desc: 在尽量不改变位置的情况下重新加载
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:32:45
     @return:
 ]]
@@ -143,13 +139,13 @@ function TableView:reloadDataInPos()
 	local x, y = self:getInnerContainer():getPosition()
 	local beforeSize = self:getInnerContainerSize()
 
-	local cell = table.remove(self._cellsUsed, 1)
+	local cell = table.remove(self._cellsUsed)
 	while cell do
 		self:_unloadCellAtIndex(cell:getIndex())
 		cell:setVisible(false)
 		table.insert(self._cellsFreed, cell)
 		cell:reset()
-		cell = table.remove(self._cellsUsed, 1)
+		cell = table.remove(self._cellsUsed)
 	end
 	self._cellsUsed = {}
 	self._cellsIndex = {}
@@ -177,17 +173,17 @@ end
 
 --[[
     @desc: 返回一个闲置的cell，可能为空
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:33:26
     @return:
 ]]
 function TableView:dequeueCell()
-	return table.remove(self._cellsFreed, 1)
+	return table.remove(self._cellsFreed)
 end
 
 --[[
     @desc: 设置填充方向
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:33:55
     --@order: 
     @return:
@@ -203,7 +199,7 @@ end
 
 --[[
     @desc: 根据index更新cell
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:34:37
     --@index: 
     @return:
@@ -227,7 +223,7 @@ end
 
 --[[
     @desc: 在index位置插入
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:35:04
     --@index: 
     @return:
@@ -259,7 +255,7 @@ end
 
 --[[
     @desc: 移除index位置的cell
-    author:BogeyRuan
+    author:Bogey
     time:2019-08-13 18:35:22
     --@index: 
     @return:
@@ -366,7 +362,6 @@ function TableView:_scrollViewDidScroll()
 		end
 	end
 end
-
 
 function TableView:_setIndexForCell(index, cell)
 	cell:setAnchorPoint(cc.p(0, 0))
@@ -531,6 +526,40 @@ function TableView:_unloadCellAtIndex(index)
 end
 
 function TableView:_scrollViewScroll()
+end
+
+--------------------------------------------------
+function TableView.attachTo(scrollView)
+	assert(tolua.type(scrollView) == "ccui.ScrollView")
+	scrollView._addCellIfNecessary = TableView._addCellIfNecessary
+	scrollView._correctFillOrder = TableView._correctFillOrder
+	scrollView._getMinContainerOffset = TableView._getMinContainerOffset
+	scrollView._indexFromOffset = TableView._indexFromOffset
+	scrollView._moveCellOutOfSight = TableView._moveCellOutOfSight
+	scrollView._offsetFromIndex = TableView._offsetFromIndex
+	scrollView._scrollViewDidScroll = TableView._scrollViewDidScroll
+	scrollView._setIndexForCell = TableView._setIndexForCell
+	scrollView._setInnerContainerInitPos = TableView._setInnerContainerInitPos
+	scrollView._updateCellsPosition = TableView._updateCellsPosition
+	scrollView._updateContentSize = TableView._updateContentSize
+
+	scrollView._cellSizeAtIndex = TableView._cellSizeAtIndex
+	scrollView._numberOfCells = TableView._numberOfCells
+	scrollView._loadCellAtIndex = TableView._loadCellAtIndex
+	scrollView._unloadCellAtIndex = TableView._unloadCellAtIndex
+	scrollView._scrollViewScroll = TableView._scrollViewScroll
+
+	scrollView.ctor = TableView.ctor
+	scrollView.cellAtIndex = TableView.cellAtIndex
+	scrollView.dequeueCell = TableView.dequeueCell
+	scrollView.registerFunc = TableView.registerFunc
+	scrollView.reloadData = TableView.reloadData
+	scrollView.reloadDataInPos = TableView.reloadDataInPos
+	scrollView.setFillOrder = TableView.setFillOrder
+	scrollView.updateCellAtIndex = TableView.updateCellAtIndex
+
+	scrollView:ctor(scrollView:getContentSize())
+	return scrollView
 end
 
 cc.TableView = TableView
